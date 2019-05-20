@@ -1,3 +1,9 @@
+# My ignore-files
+*.bin
+*.raw
+*.wv
+*.settings
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
