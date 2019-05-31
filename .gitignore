@@ -1,5 +1,6 @@
 # My ignore-files
 *.bin
+*.npz
 *.raw
 *.wv
 *.settings

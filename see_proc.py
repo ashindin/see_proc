@@ -74,6 +74,67 @@ class SeeProcessing(QtWidgets.QMainWindow, Ui_MainWindow):
         self.t_axe = np.zeros(1)
         self.data = np.zeros(1)
         self.interference_mask = np.zeros(1, dtype='bool')
+#        bum_int=np.zeros(1)
+#        bumd_int=np.zeros(1)
+#        bum2_int=np.zeros(1)
+#        dm_int=np.zeros(1)
+#        um_int=np.zeros(1)#
+#        bum_freqs=np.zeros(1)
+#        bumd_freqs=np.zeros(1)
+#        bum2_freqs=np.zeros(1)
+#        dm_freqs=np.zeros(1)
+#        um_freqs=np.zeros(1)
+        self.bum_int_line = self.p2_plot.plot([], [], pen='m')
+        self.bum_freqs_line = self.p1_plot.plot([], [], pen='w')
+        self.bum2_int_line = self.p2_plot.plot([], [], pen='b')
+        self.bum2_freqs_line = self.p1_plot.plot([], [], pen='w')
+        self.bumd_int_line = self.p2_plot.plot([], [], pen='g')
+        self.bumd_freqs_line = self.p1_plot.plot([], [], pen='w')
+        self.um_int_line = self.p2_plot.plot([], [], pen='y')
+        self.um_freqs_line = self.p1_plot.plot([], [], pen='w')
+        self.dm_int_line = self.p2_plot.plot([], [], pen='r')
+        self.dm_freqs_line = self.p1_plot.plot([], [], pen='w')
+        self.filename = ""
+        self.roi_bum_obj.sigRegionChanged.connect(self.update_roi_bum)
+        self.roi_bum2_obj.sigRegionChanged.connect(self.update_roi_bum2)
+        self.roi_bumd_obj.sigRegionChanged.connect(self.update_roi_bumd)
+        self.roi_dm_obj.sigRegionChanged.connect(self.update_roi_dm)
+        self.roi_um_obj.sigRegionChanged.connect(self.update_roi_um)
+        self.sec_line_ver.sigDragged.connect(self.updatesec_ver)
+        self.sec_line_hor.sigDragged.connect(self.updatesec_hor)
+        self.Button_load.clicked.connect(self.on_load_click)
+        self.Button_open.clicked.connect(self.on_open_click)
+        self.Button_save.clicked.connect(self.on_save_click)
+        proxy = pg.SignalProxy(self.p0_plot.scene().sigMouseMoved, rateLimit=60,
+                               slot=self.mousemoved_p0)
+        self.p0_plot.proxy = proxy
+        proxy = pg.SignalProxy(self.p2_plot.scene().sigMouseMoved, rateLimit=60,
+                               slot=self.mousemoved_p2)
+        self.p2_plot.proxy = proxy
+        proxy = pg.SignalProxy(self.p1_plot.scene().sigMouseMoved, rateLimit=60,
+                               slot=self.mousemoved_p1)
+        self.p1_plot.proxy = proxy
+        self.p1_plot.scene().sigMouseClicked.connect(self.on_click)
+        self.radio_bum.toggled.connect(lambda: self.btnstate(self.radio_bum))
+        self.radio_2bum.toggled.connect(lambda: self.btnstate(self.radio_2bum))
+        self.radio_bumd.toggled.connect(lambda: self.btnstate(self.radio_bumd))
+        self.radio_dm.toggled.connect(lambda: self.btnstate(self.radio_dm))
+        self.radio_um.toggled.connect(lambda: self.btnstate(self.radio_um))
+    def update_roi_bum(self):
+        """This method does blah blah."""
+        # ~ global f_axe, t_axe, data, interference_mask
+        # ~ try:
+        mask = self.roi_bum_obj.getArrayRegion(self.data*(1-self.interference_mask)- \
+                                               200*self.interference_mask, self.img)
+        mask[mask == 0.] = -200
+        handles = self.roi_bum_obj.getHandles()
+        roi_xy = [[np.round(handle.pos()[0]),
+                   np.round(handle.pos()[1]*10)/10] for handle in handles]
+        roi_xya = np.array(roi_xy)
+        f0_min = np.min(roi_xya[:, 0])
+        f0_max = np.max(roi_xya[:, 0])
+        f_min = np.min(roi_xya[:, 1])
+#        f_max = np.max(roi_xya[:, 1])
         f0_min_ind = np.where(np.abs(self.t_axe-f0_min) ==
                               np.min(np.abs(self.t_axe-f0_min)))[0][0]
         f0_max_ind = np.where(np.abs(self.t_axe-f0_max) ==
@@ -294,45 +355,45 @@ class SeeProcessing(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.update_roi_dm()
             # Пробуем открыть proc файл
             filename_load = 'proc_'+self.filename.split('_')[-2]+'.npz'
-            # ~ try:
-            filedata = np.load(filename_load)
-            # ~ print(list(filedata.keys()))
-            self.interference_mask = filedata['interference_mask']
-            roi_bum_xy = filedata['roi_bum_xy']
-            roi_bumd_xy = filedata['roi_bumd_xy']
-            # ~ roi_bum2_xy = filedata['roi_bum2_xy']
-            # ~ roi_um_xy = filedata['roi_um_xy']
-            roi_dm_xy = filedata['roi_dm_xy']
-            self.img.setImage(self.data*(1.-self.interference_mask)-200.*self.interference_mask, autoLevels=False)
-            self.p1_plot.removeItem(self.roi_bum_obj)
-            self.roi_bum_obj = pg.PolyLineROI(roi_bum_xy, pen=(6, 9), closed=True, movable=False)
-            # ~ self.p1_plot.removeItem(self.roi_bum2_obj)
-            # ~ self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
-            self.p1_plot.removeItem(self.roi_bumd_obj)
-            self.roi_bumd_obj = pg.PolyLineROI(roi_bumd_xy, pen=(6, 9), closed=True, movable=False)
-            self.p1_plot.removeItem(self.roi_um_obj)
-            # ~ self.roi_um_obj = pg.PolyLineROI(roi_um_xy, pen=(6, 9), closed=True, movable=False)
-            # ~ self.p1_plot.removeItem(self.roi_dm_obj)
-            self.roi_dm_obj = pg.PolyLineROI(roi_dm_xy, pen=(6, 9), closed=True, movable=False)
-            if self.radio_bum.isChecked():
-                self.p1_plot.addItem(self.roi_bum_obj)
-                self.update_roi_bum()
-            if self.radio_2bum.isChecked():
-                self.p1_plot.addItem(self.roi_bumd_obj)
-                self.update_roi_bum2()
-            if self.radio_bumd.isChecked():
-                self.p1_plot.addItem(self.roi_bumd_obj)
-                self.update_roi_bumd()
-            if self.radio_um.isChecked():
-                self.p1_plot.addItem(self.roi_um_obj)
-                self.update_roi_um()
-            if self.radio_dm.isChecked():
-                self.p1_plot.addItem(self.roi_dm_obj)
-                self.update_roi_dm()
-            self.updatesec_hor()
-            self.updatesec_ver()
-            # ~ except:
-                # ~ print("Can not load proc file")
+            try:
+                filedata = np.load(filename_load)
+                # ~ print(list(filedata.keys()))
+                self.interference_mask = filedata['interference_mask']
+                roi_bum_xy = filedata['roi_bum_xy']
+                roi_bumd_xy = filedata['roi_bumd_xy']
+                # ~ roi_bum2_xy = filedata['roi_bum2_xy']
+                # ~ roi_um_xy = filedata['roi_um_xy']
+                roi_dm_xy = filedata['roi_dm_xy']
+                self.img.setImage(self.data*(1.-self.interference_mask)-200.*self.interference_mask, autoLevels=False)
+                self.p1_plot.removeItem(self.roi_bum_obj)
+                self.roi_bum_obj = pg.PolyLineROI(roi_bum_xy, pen=(6, 9), closed=True, movable=False)
+                # ~ self.p1_plot.removeItem(self.roi_bum2_obj)
+                # ~ self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
+                self.p1_plot.removeItem(self.roi_bumd_obj)
+                self.roi_bumd_obj = pg.PolyLineROI(roi_bumd_xy, pen=(6, 9), closed=True, movable=False)
+                self.p1_plot.removeItem(self.roi_um_obj)
+                # ~ self.roi_um_obj = pg.PolyLineROI(roi_um_xy, pen=(6, 9), closed=True, movable=False)
+                # ~ self.p1_plot.removeItem(self.roi_dm_obj)
+                self.roi_dm_obj = pg.PolyLineROI(roi_dm_xy, pen=(6, 9), closed=True, movable=False)
+                if self.radio_bum.isChecked():
+                    self.p1_plot.addItem(self.roi_bum_obj)
+                    self.update_roi_bum()
+                if self.radio_2bum.isChecked():
+                    self.p1_plot.addItem(self.roi_bumd_obj)
+                    self.update_roi_bum2()
+                if self.radio_bumd.isChecked():
+                    self.p1_plot.addItem(self.roi_bumd_obj)
+                    self.update_roi_bumd()
+                if self.radio_um.isChecked():
+                    self.p1_plot.addItem(self.roi_um_obj)
+                    self.update_roi_um()
+                if self.radio_dm.isChecked():
+                    self.p1_plot.addItem(self.roi_dm_obj)
+                    self.update_roi_dm()
+                self.updatesec_hor()
+                self.updatesec_ver()
+            except:
+                print("Can not load proc file")
     def on_save_click(self):
         """This method does blah blah."""
         # ~ global interference_mask, filename
