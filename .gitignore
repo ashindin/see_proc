@@ -1,4 +1,5 @@
 # My ignore-files
+*.ipynb
 *.bin
 *.npz
 *.raw
