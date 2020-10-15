@@ -1,12 +1,9 @@
-"""This module does blah blah."""
-import sys
+import sys, os
 from PyQt5 import QtCore, QtWidgets
 import numpy as np
 import pyqtgraph as pg
 from see_proc_gui import Ui_MainWindow
-
 class SeeProcessing(QtWidgets.QMainWindow, Ui_MainWindow):
-    """This class does blah blah."""
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -354,21 +351,22 @@ class SeeProcessing(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.p1_plot.addItem(self.roi_dm_obj)
                 self.update_roi_dm()
             # Пробуем открыть proc файл
-            filename_load = 'proc_'+self.filename.split('_')[-2]+'.npz'
+            filepath = os.path.dirname(self.filename)
+            filename_load = filepath+'/'+'proc_'+self.filename.split('_')[-2]+'.npz'
             try:
                 filedata = np.load(filename_load)
                 # ~ print(list(filedata.keys()))
                 self.interference_mask = filedata['interference_mask']
                 roi_bum_xy = filedata['roi_bum_xy']
                 roi_bumd_xy = filedata['roi_bumd_xy']
-                # ~ roi_bum2_xy = filedata['roi_bum2_xy']
+                roi_bum2_xy = filedata['roi_bum2_xy']
                 # ~ roi_um_xy = filedata['roi_um_xy']
                 roi_dm_xy = filedata['roi_dm_xy']
                 self.img.setImage(self.data*(1.-self.interference_mask)-200.*self.interference_mask, autoLevels=False)
                 self.p1_plot.removeItem(self.roi_bum_obj)
                 self.roi_bum_obj = pg.PolyLineROI(roi_bum_xy, pen=(6, 9), closed=True, movable=False)
-                # ~ self.p1_plot.removeItem(self.roi_bum2_obj)
-                # ~ self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
+                self.p1_plot.removeItem(self.roi_bum2_obj)
+                self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
                 self.p1_plot.removeItem(self.roi_bumd_obj)
                 self.roi_bumd_obj = pg.PolyLineROI(roi_bumd_xy, pen=(6, 9), closed=True, movable=False)
                 self.p1_plot.removeItem(self.roi_um_obj)
@@ -449,14 +447,14 @@ class SeeProcessing(QtWidgets.QMainWindow, Ui_MainWindow):
         self.interference_mask = filedata['interference_mask']
         roi_bum_xy = filedata['roi_bum_xy']
         roi_bumd_xy = filedata['roi_bumd_xy']
-        # ~ roi_bum2_xy = filedata['roi_bum2_xy']
+        roi_bum2_xy = filedata['roi_bum2_xy']
         # ~ roi_um_xy = filedata['roi_um_xy']
         roi_dm_xy = filedata['roi_dm_xy']
         self.img.setImage(self.data*(1.-self.interference_mask)-200.*self.interference_mask, autoLevels=False)
         self.p1_plot.removeItem(self.roi_bum_obj)
         self.roi_bum_obj = pg.PolyLineROI(roi_bum_xy, pen=(6, 9), closed=True, movable=False)
-        # ~ self.p1_plot.removeItem(self.roi_bum2_obj)
-        # ~ self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
+        self.p1_plot.removeItem(self.roi_bum2_obj)
+        self.roi_bum2_obj = pg.PolyLineROI(roi_bum2_xy, pen=(6, 9), closed=True, movable=False)
         self.p1_plot.removeItem(self.roi_bumd_obj)
         self.roi_bumd_obj = pg.PolyLineROI(roi_bumd_xy, pen=(6, 9), closed=True, movable=False)
         # ~ self.p1_plot.removeItem(self.roi_um_obj)
